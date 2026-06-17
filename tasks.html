@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tasks</title>
+
+<style>
+
+body {
+  background: rgb(28, 44, 43);
+  position: relative;
+  overflow: hidden;
+}
+
+body::before {
+  content: "";
+  position: absolute;
+  top: 458px;
+  left: 30px;
+  width: 150px;
+  height: 330px;
+  background: rgba(58, 108, 97, 0.25);
+  border-radius: 100%;
+  filter: blur(40px);
+}
+
+body::before {
+  content: "";
+  position: absolute;
+  top: 48px;
+  left: 230px;
+  width: 250px;
+  height: 330px;
+  background: rgba(58, 108, 97, 0.25);
+  border-radius: 100%;
+  filter: blur(40px);
+}
+/* MAIN LAYOUT */
+.container{
+    display:flex;
+    height:100vh;
+    opacity:0;
+    transform:translateY(10px);
+    animation:pageLoad 0.8s ease forwards;
+}
+
+/* LEFT SIDE */
+.left{
+    width:50%;
+    padding:60px 40px 40px 40px;
+    overflow:auto;
+
+    opacity:0;
+    transform:translateX(-30px);
+    animation:slideLeft 0.8s ease forwards;
+    animation-delay:0.2s;
+}
+
+/* RIGHT SIDE */
+.right{
+    width:50%;
+    position:relative;
+    overflow:hidden;
+
+    opacity:0;
+    transform:translateX(30px);
+    animation:slideRight 0.8s ease forwards;
+    animation-delay:0.3s;
+}
+
+/* VIDEO */
+.right video{
+    position:absolute;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+
+    opacity:0;
+    animation:fadeIn 1.2s ease forwards;
+    animation-delay:0.4s;
+}
+
+/* TITLE */
+h1{
+    text-align:center;
+    margin-bottom:40px;
+}
+
+/* TASK ITEMS */
+.task{
+    margin:12px 0;
+    font-size:18px;
+
+    opacity:0;
+    animation:fadeTask 0.5s ease forwards;
+}
+
+/* NAV */
+nav{
+    position:fixed;
+    top:15px;
+    left:15px;
+    background:rgba(255,105,135,0.9);
+    padding:10px 18px;
+    border-radius:25px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.2);
+    z-index:9999;
+}
+
+nav a{
+    text-decoration:none;
+    color:rgb(230, 222, 222);
+    font-weight:bold;
+    font-size:14px;
+    transition:0.2s ease;
+}
+
+nav a:hover{
+    opacity:0.6;
+    transform:scale(1.08);
+}
+
+/* BUTTON */
+button{
+    font-size:1em;
+    padding:10px 30px;
+    margin:40px auto;
+    display:block;
+    color:rgb(7, 50, 45);
+    background:rgba(255, 105, 135, 0.432);
+    cursor:pointer;
+    border:none;
+    border-radius:10px;
+    transition:0.2s ease;
+}
+
+button:hover{
+    background:rgba(255, 105, 135, 0.954);
+}
+
+/* ANIMATIONS */
+@keyframes pageLoad{
+    to{opacity:1; transform:translateY(0);}
+}
+
+@keyframes slideLeft{
+    to{opacity:1; transform:translateX(0);}
+}
+
+@keyframes slideRight{
+    to{opacity:1; transform:translateX(0);}
+}
+
+@keyframes fadeIn{
+    to{opacity:1;}
+}
+
+@keyframes fadeTask{
+    to{opacity:1;}
+}
+
+</style>
+</head>
+
+<body>
+
+<nav>
+    <a href="tizianadialyplanner.html">Home</a>
+</nav>
+
+<div class="container">
+
+    <div class="left">
+
+        <h1>Tasks for Day <span id="dayNumber"></span></h1>
+
+        <div id="taskContainer"></div>
+
+        <button onclick="checkCompletion()">Check Completion</button>
+
+        <p id="message"></p>
+
+    </div>
+
+    <div class="right">
+        <video autoplay muted loop>
+            <source src="video2.mp4">
+        </video>
+    </div>
+
+</div>
+
+<script>
+
+const day = new URLSearchParams(window.location.search).get("day");
+document.getElementById("dayNumber").innerText = day;
+
+let tasks = JSON.parse(localStorage.getItem("plannerTasks")) || [];
+
+/* FILTER + SORT */
+const dayTasks = tasks
+    .filter(t => t.repeat === "daily" || t.day == day)
+    .sort((a, b) => a.start.localeCompare(b.start));
+
+/* TIME FORMAT */
+function convertTime(time){
+    let [h, m] = time.split(":");
+    h = Number(h);
+
+    let period = h >= 12 ? "PM" : "AM";
+    h = h % 12;
+    if(h === 0) h = 12;
+
+    return `${h}:${m} ${period}`;
+}
+
+/* RENDER TASKS */
+function render(){
+
+    const container = document.getElementById("taskContainer");
+    container.innerHTML = "";
+
+    if(dayTasks.length === 0){
+        container.innerHTML = "<p>No tasks for this day.</p>";
+        return;
+    }
+
+    dayTasks.forEach((t,i) => {
+
+        container.innerHTML += `
+            <div class="task">
+                <input type="checkbox" id="t${i}">
+                <label for="t${i}">
+                    ${convertTime(t.start)} - ${convertTime(t.end)} ${t.task}
+                </label>
+            </div>
+        `;
+    });
+}
+
+/* CHECK COMPLETION */
+function checkCompletion(){
+
+    const boxes = document.querySelectorAll("input[type=checkbox]");
+    let allDone = true;
+
+    boxes.forEach(b=>{
+        if(!b.checked) allDone = false;
+    });
+
+    document.getElementById("message").innerText =
+        allDone ? "All tasks complete!" : "";
+
+    if(!allDone){
+        alert("Finish all tasks first");
+    }
+}
+
+render();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Planner</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Snell Roundhand", cursive;
+            text-align:center;
+            color: rgb(241, 236, 236);
+            overflow: hidden;
+        }
+
+        /* 🎥 Background video styling */
+        #bgVideo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center center;
+            z-index: -1;  
+            
+        }
+
+        /* Dark overlay so text is readable */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        h1, p, button, input, label {
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            margin-top: 250px;
+        }
+
+        button {
+            font-size: 1.0em;
+            padding: 10px 20px;
+            margin: 20px;
+            color: rgb(235, 11, 227);
+            background:rgba(34, 3, 59, 0.642);
+            cursor: pointer;
+        }
+
+        #dayInputContainer {
+            display: none;
+            margin-top: 10px;
+            color: rgb(253, 253, 253);
+
+        }
+
+        input {
+            font-size: 0.8em;
+            padding: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 🎥 Background Video -->
+    <video autoplay muted loop id="bgVideo">
+        <source src="video.mp4" type="video/mp4">
+        Your browser does not support HTML5 video.
+    </video>
+
+    <!-- Dark overlay -->
+    <div class="overlay"></div>
+
+    <h1>
+        <p><strong>Hi,Tiziana</strong></p>
+   </h1>
+    <div>
+        <button onclick="showDayInput()">Check-In</button>
+        <button onclick="window.location.href='schedule.html'">Schedule Your Week</button>
+    </div>
+
+    <div id="dayInputContainer">
+        <label for="day">What day is it?</label>
+        <input type="number" id="day" min="1" max="30" required>
+        <br>
+        <button onclick="goToTasks()">Next</button>
+    </div>
+
+    <script>
+        function showDayInput() {
+            document.getElementById('dayInputContainer').style.display = 'block';
+        }
+
+        function goToTasks() {
+            const day = document.getElementById('day').value;
+            if (day < 1 || day > 30) {
+                alert('Please enter a day between 1 and 30.');
+            } else {
+                window.location.href = `tasks.html?day=${day}`;
+            }
+        }
+    </script>
+
+</body>
+</html>

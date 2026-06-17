@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Schedule</title>
+
+<style>
+body{
+    margin:0;
+    font-family:"Snell Roundhand", cursive;
+    height:100vh;
+    overflow:hidden;
+    color:white;
+}
+
+/* BACKGROUND */
+video{
+    position:fixed;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    z-index:-2;
+    opacity: 100%;
+}
+
+.overlay{
+    position:fixed;
+    width:100%;
+    height:100%;
+    background:rgba(86, 65, 75, 0.041);
+    z-index:-1;
+}
+
+/* DAY PROMPT */
+#dayPrompt{
+    position:fixed;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.6);
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    z-index:20;
+}
+
+#dayPrompt input{
+    width: 35%;
+    padding:15px;
+    margin-bottom: 16px;
+    margin-top: 32px;
+    font-size:18px;
+    border-radius:10px;
+    text-align:center;
+}
+
+#dayPrompt button{
+    font-size: 1em;
+    width: 20%;
+    padding: 15px 30px;
+    margin: 30px auto;
+    background:pink;
+    display:block;
+    cursor: pointer;
+    order:none;
+    border-radius:10px;
+    transition:0.2s ease;
+}
+
+#dayPrompt button:hover{
+    background:rgba(220, 74, 6, 0.954);
+}
+
+/* MAIN LAYOUT */
+.container{
+    display:none;
+    height:100vh;
+    padding-top:90px;
+}
+
+.left{
+    width:50%;
+    padding:15px;
+
+    height: calc(100vh - 90px);
+    display:flex;
+    flex-direction:column;
+}
+
+
+.right{
+    width:50%;
+    padding:15px;
+}
+
+/* TITLE */
+.left h2{
+    margin-bottom:10px;
+}
+#titleDay{
+    margin-bottom:10px;
+    flex-shrink:0; /* keeps it fixed */
+}
+
+#list{
+    overflow-y:auto;
+    flex:1;        /* takes remaining space */
+    padding-right:5px;
+}
+/* TASK CARD */
+.task{
+    margin:6px 0;
+    padding:12px 14px;
+    border-radius:12px;
+
+    background:rgba(255,255,255,0.10);
+    backdrop-filter: blur(8px);
+
+    box-shadow:0 4px 10px rgba(0,0,0,0.2);
+
+    transition:0.2s ease;
+}
+
+.task:hover{
+    background:rgba(255,255,255,0.18);
+    transform:translateX(4px);
+}
+
+/* TIME + TEXT */
+.task-time{
+    font-size:14px;
+    opacity:0.8;
+}
+
+.task-name{
+    font-size:16px;
+    margin-top:2px;
+}
+
+/* ACTIONS (hidden until hover) */
+.task-actions{
+    opacity:0;
+    transition:0.2s ease;
+    margin-top:4px;
+}
+
+.task:hover .task-actions{
+    opacity:1;
+}
+
+/* LINKS */
+.task-actions a{
+    margin-right:12px;
+    cursor:pointer;
+    font-size:13px;
+    color:#a8673c;
+    text-decoration:none;
+}
+
+.task-actions a:hover{
+    text-decoration:underline;
+    opacity:0.8;
+    color:#ff6601;
+
+}
+
+/* INPUTS */
+input, button{
+    width:100%;
+    padding:10px;
+    margin:5px 0;
+    box-sizing:border-box;
+}
+
+button{
+    background:#ff69b4;
+    border:none;
+    border-radius: 56px;
+    color:white;
+    cursor:pointer;
+}
+button:hover{
+    background:rgba(255, 105, 135, 0.954);
+ 
+   }
+ 
+/* NAV */
+nav{
+    position:fixed;
+    top:15px;
+    left:15px;
+    z-index:9999;
+}
+
+/* Home button styled like Enter button */
+nav a{
+    font-size: 1em;
+    padding: 10px 30px;
+    background: pink;
+    display: inline-block;
+    cursor: pointer;
+    border-radius: 60px;
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    transition:0.2s ease;
+}
+
+/* same hover style as Enter button */
+nav a:hover{
+    background: rgba(255, 105, 135, 0.954);
+}
+</style>
+</head>
+
+<body>
+
+<video autoplay muted loop>
+    <source src="video3.mp4">
+</video>
+
+<div class="overlay"></div>
+
+<nav>
+    <a href="tizianadialyplanner.html">Home</a>
+</nav>
+
+<!-- DAY PROMPT -->
+<div id="dayPrompt">
+    <h2>Enter Day</h2>
+    <input id="dayInput" type="number" min="1" max="30">
+    <button onclick="loadDay()">Enter</button>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+    <div class="left">
+        <h2 id="titleDay"></h2>
+        <div id="list"></div>
+    </div>
+
+    <div class="right">
+        <h2>Add Task</h2>
+
+        <input id="taskInput" placeholder="Task Name">
+        <input id="startInput" type="time">
+        <input id="endInput" type="time">
+
+        <button onclick="addTask()">Add Task</button>
+    </div>
+
+</div>
+
+<script>
+
+let tasks = JSON.parse(localStorage.getItem("plannerTasks")) || [];
+let currentDay = null;
+
+/* ================================
+   ONLY CHANGE: VERSION UPDATED
+================================ */
+const ROUTINE_VERSION = "3.0";
+
+const routine = [
+    { task:"Gym", start:"05:00", end:"09:00" },
+    { task:"Sec+ one module per day", start:"08:00", end:"12:00" },
+    { task:"House Chores", start:"13:00", end:"14:00" },
+    { task:"3 Hack the box chalenges", start:"15:00", end:"19:00" },
+    { task:"20 jobs application", start:"19:00", end:"21:00" }
+];
+
+if(localStorage.getItem("routineVersion") !== ROUTINE_VERSION){
+
+    tasks = tasks.filter(t => t.repeat !== "daily");
+
+    routine.forEach(r=>{
+        tasks.push({
+            id: Date.now() + Math.random(),
+            day:"all",
+            task:r.task,
+            start:r.start,
+            end:r.end,
+            repeat:"daily"
+        });
+    });
+
+    localStorage.setItem("plannerTasks", JSON.stringify(tasks));
+    localStorage.setItem("routineVersion", ROUTINE_VERSION);
+}
+
+/* LOAD DAY */
+function loadDay(){
+    const d = document.getElementById("dayInput").value;
+
+    if(!d){
+        alert("Enter day");
+        return;
+    }
+
+    currentDay = d;
+
+    document.getElementById("titleDay").innerText = "Day " + d;
+    document.getElementById("dayPrompt").style.display = "none";
+    document.querySelector(".container").style.display = "flex";
+
+    render();
+}
+
+/* ADD TASK */
+function addTask(){
+
+    const task = document.getElementById("taskInput");
+    const start = document.getElementById("startInput");
+    const end = document.getElementById("endInput");
+
+    if(!task.value || !start.value || !end.value){
+        alert("Fill all fields");
+        return;
+    }
+
+    tasks.push({
+        id: Date.now(),
+        day: currentDay,
+        task: task.value,
+        start: start.value,
+        end: end.value,
+        repeat: "none"
+    });
+
+    localStorage.setItem("plannerTasks", JSON.stringify(tasks));
+
+    task.value = "";
+    start.value = "";
+    end.value = "";
+
+    render();
+}
+
+/* DELETE */
+function deleteTask(id){
+    tasks = tasks.filter(t => t.id !== id);
+    localStorage.setItem("plannerTasks", JSON.stringify(tasks));
+    render();
+}
+
+/* EDIT */
+function editTask(id){
+    const t = tasks.find(x => x.id === id);
+
+    document.getElementById("taskInput").value = t.task;
+    document.getElementById("startInput").value = t.start;
+    document.getElementById("endInput").value = t.end;
+
+    deleteTask(id);
+}
+
+/* TIME FORMAT */
+function convertTime(time){
+    let [h, m] = time.split(":");
+    h = Number(h);
+
+    let period = h >= 12 ? "PM" : "AM";
+    h = h % 12;
+    if(h === 0) h = 12;
+
+    return `${h}:${m} ${period}`;
+}
+
+/* RENDER */
+function render(){
+
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    const dayTasks = tasks
+        .filter(t => t.repeat === "daily" || t.day == currentDay)
+        .sort((a, b) => a.start.localeCompare(b.start));
+
+    dayTasks.forEach(t => {
+        list.innerHTML += `
+            <div class="task">
+                <div class="task-time">
+                    ${convertTime(t.start)} - ${convertTime(t.end)}
+                </div>
+
+                <div class="task-name">
+                    ${t.task}
+                </div>
+
+                <div class="task-actions">
+                    <a onclick="editTask(${t.id})">Edit</a>
+                    <a onclick="deleteTask(${t.id})">Delete</a>
+                </div>
+            </div>
+        `;
+    });
+}
+
+</script>
+
+</body>
+</html>
